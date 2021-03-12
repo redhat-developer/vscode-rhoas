@@ -1,0 +1,19 @@
+stages:
+  - build
+
+image: node
+
+before_script:
+  - npm install -g vsce
+  - npm install
+
+build:
+  stage: build
+  script:
+    - npm run tslint
+    - npm run compile
+    - npm run vscode:prepublish
+    - vsce package
+  artifacts:
+    paths:
+      - "*.vsix"
