@@ -18,3 +18,8 @@ npx vsce package
 ```
 
 Install the generated vscode-rhoas-*.vsix file.
+
+## CI Builds
+- Go to https://gitlab.cee.redhat.com/beaverama/vscode-rhoas/-/pipelines, 
+- download and unzip the latest artifact
+- Install the vscode-rhoas-*.vsix file.

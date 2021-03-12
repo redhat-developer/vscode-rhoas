@@ -11,8 +11,6 @@ build:
   stage: build
   script:
     - npm run lint
-    - npm run compile
-    - npm run vscode:prepublish
     - vsce package
   artifacts:
     paths:
