@@ -1,33 +1,12 @@
 import axios from 'axios';
-import { Kafka } from 'kafkajs';
 import * as vscode from 'vscode';
+import { Cluster, ClusterProviderProcessor, ClusterSettings, ConnectionOptions, KafkaConfig } from './vscodekafka-api'
+
 import { getTelemetryService, TelemetryService } from "@redhat-developer/vscode-redhat-telemetry";
 
 const KAFKA_API = 'https://api.stage.openshift.com/api/managed-services-api/v1/kafkas';
 const LANDING_PAGE = 'https://cloud.redhat.com/beta/application-services/openshift-streams';
 
-export interface ConnectionOptions {
-    clusterProviderId?: string;
-    bootstrap: string;
-}
-
-export interface ClusterIdentifier {
-    clusterProviderId?: string;
-    id: string;
-    name: string;
-}
-
-export interface Cluster extends ClusterIdentifier, ConnectionOptions {
-}
-
-export interface ClusterSettings {
-	getAll():{bootstrap:string}[]
-}
-
-export interface ClusterProviderProcessor {
-    collectClusters(clusterSettings: ClusterSettings): Promise<Cluster[] | undefined>;
-    createKafka?(connectionOptions: ConnectionOptions): Kafka;
-}
 
 export async function activate(_context: vscode.ExtensionContext): Promise<ClusterProviderProcessor> {
 	let telemetryService: TelemetryService = await getTelemetryService("redhat.vscode-rhoas")
@@ -40,7 +19,7 @@ const RHOSAK_LABEL = "Red Hat OpenShift Streams for Apache Kafka";
 
 function getRHOSAKClusterProvider(telemetryService: TelemetryService): ClusterProviderProcessor {
 	return {
-		collectClusters: async (clusterSettings: ClusterSettings): Promise<Cluster[] | undefined> => {
+		async collectClusters(clusterSettings: ClusterSettings): Promise<Cluster[] | undefined> {
 			const session = await vscode.authentication.getSession('redhat-account-auth', ['openid'], { createIfNone: true });
 			if (!session) {
 				vscode.window.showWarningMessage('You need to log into Red Hat first!');
@@ -79,8 +58,8 @@ function getRHOSAKClusterProvider(telemetryService: TelemetryService): ClusterPr
 			}
 			return [];
 		},
-		createKafka: (connectionOptions: ConnectionOptions): Kafka => {
-			return new Kafka({
+		createKafkaConfig(connectionOptions: ConnectionOptions): KafkaConfig {
+			return {
 				clientId: "vscode-kafka",
 				brokers: connectionOptions.bootstrap.split(","),
 				ssl: true,
@@ -92,8 +71,9 @@ function getRHOSAKClusterProvider(telemetryService: TelemetryService): ClusterPr
 						return {
 							value: token
 						};
-				} },
-			});
+					}
+				}
+			};
 		}
 	};
 }

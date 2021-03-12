@@ -28,7 +28,7 @@
 			"clusterProviders": [
 				{
 					"id": "rhosak",
-					"label": "Red Hat OpenShift Streams For Apache Kafka"
+					"name": "Red Hat OpenShift Streams For Apache Kafka"
 				}
 			]
 		}
@@ -69,7 +69,6 @@
 	},
 	"dependencies": {
 		"@redhat-developer/vscode-redhat-telemetry": "0.0.13",
-		"axios": "^0.21.1",
-		"kafkajs": "^1.15.0"
+		"axios": "^0.21.1"
 	}
 }
