@@ -6,7 +6,7 @@ The Red Hat authentication is provided by [vscode-redhat-account](https://github
 
 Requires 
 - the latest [CI build](https://github.com/redhat-developer/vscode-redhat-account/actions?query=is%3Asuccess+branch%3Amain) of [vscode-redhat-account](https://github.com/redhat-developer/vscode-redhat-account/)
-- the latest [CI build](https://github.com/jlandersen/vscode-kafka/actions/workflows/ci.yml) from https://github.com/jlandersen/vscode-kafka/pull/124
+- the latest [CI build](https://github.com/jlandersen/vscode-kafka/actions/workflows/ci.yml) of [vscode-kafka]( https://github.com/jlandersen/vscode-kafka/)
 
 TODO more details...
 
