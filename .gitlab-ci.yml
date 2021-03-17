@@ -11,7 +11,8 @@ build:
   stage: build
   script:
     - npm run lint
-    - vsce package
+    - VERSION=$(node -p "require('./package.json').version")
+    - npx vsce package -o vscode-rhoas-${VERSION}-${CI_PIPELINE_IID}.vsix
   artifacts:
     paths:
       - "*.vsix"
