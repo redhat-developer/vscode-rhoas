@@ -14,7 +14,7 @@
 	"preview": true,
 	"repository": {
 		"type": "git",
-		"url": "https://gitlab.cee.redhat.com:beaverama/vscode-rhoas"
+		"url": "https://gitlab.cee.redhat.com/beaverama/vscode-rhoas"
 	},
 	"categories": [
 		"Other"
@@ -31,7 +31,12 @@
 					"name": "Red Hat OpenShift Streams For Apache Kafka"
 				}
 			]
-		}
+		},
+		"commands":[{
+			"command": "rhoas.open.RHOSAKDashboard",
+			"category": "Red Hat",
+			"title": "Open Red Hat OpenShift Streams for Apache Kafka Dashboard"
+		}]
 	},
 	"extensionDependencies": [
 		"jeppeandersen.vscode-kafka",
@@ -39,7 +44,9 @@
 		"redhat.vscode-commons"
 	],
 	"main": "./dist/extension.js",
-	"activationEvents": [],
+	"activationEvents": [
+		"onCommand:rhoas.open.RHOSAKDashboard"
+	],
 	"scripts": {
 		"vscode:prepublish": "npm run package",
 		"compile": "webpack",

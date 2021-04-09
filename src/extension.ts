@@ -1,21 +1,27 @@
 import axios from 'axios';
-import * as vscode from 'vscode';
+import {authentication, commands, ExtensionContext, ProgressLocation, Uri, window } from 'vscode';
 import { Cluster, KafkaExtensionParticipant, ClusterSettings, ConnectionOptions, KafkaConfig, ClusterProviderParticipant } from './vscodekafka-api';
 ​
 import { getTelemetryService, TelemetryService } from "@redhat-developer/vscode-redhat-telemetry";
 ​
 const KAFKA_API = 'https://api.stage.openshift.com/api/managed-services-api/v1/kafkas';
 const LANDING_PAGE = 'https://cloud.redhat.com/beta/application-services/openshift-streams';
-​
-export async function activate(_context: vscode.ExtensionContext): Promise<KafkaExtensionParticipant> {
+​const OPEN_RHOSAK_DASHBOARD_COMMAND = 'rhoas.open.RHOSAKDashboard';
+export async function activate(context: ExtensionContext): Promise<KafkaExtensionParticipant> {
 	let telemetryService: TelemetryService = await getTelemetryService("redhat.vscode-rhoas");
 	telemetryService.sendStartupEvent();
+	context.subscriptions.push(
+		commands.registerCommand(OPEN_RHOSAK_DASHBOARD_COMMAND, openRHOSAKDashboard)
+	);
 	return getRHOSAKClusterProvider(telemetryService);
 }
+
+const UNAUTHORIZED = []; 
 ​
 const RHOSAK_CLUSTER_PROVIDER_ID = "rhosak";
 const RHOSAK_LABEL = "Red Hat OpenShift Streams for Apache Kafka";
-​
+​const OPEN_DASHBOARD = 'Open Dashboard';
+
 function getRHOSAKClusterProvider(telemetryService: TelemetryService): KafkaExtensionParticipant {
 	return {
 		getClusterProviderParticipant(clusterProviderId: string): ClusterProviderParticipant {
@@ -28,28 +34,41 @@ function getRHOSAKClusterProvider(telemetryService: TelemetryService): KafkaExte
 }
 ​
 async function configureClusters(clusterSettings: ClusterSettings, telemetryService: TelemetryService): Promise<Cluster[] | undefined> {
-	const session = await vscode.authentication.getSession('redhat-account-auth', ['openid'], { createIfNone: true });
+	const session = await authentication.getSession('redhat-account-auth', ['openid'], { createIfNone: true });
 	if (!session) {
-		vscode.window.showWarningMessage('You need to log into Red Hat first!');
+		window.showWarningMessage('You need to log into Red Hat first!');
 		return [];
 	}
-	const start = new Date().getTime();
 	const existingClusters = clusterSettings.getAll().map(cluster => cluster.bootstrap);
-	let clusters = await vscode.window.withProgress({
-		location: vscode.ProgressLocation.Notification,
-	}, async (progress) => {
-		progress.report({
-			message: `Fetching Kafka cluster definitions from Red Hat...`,
+	let clusters = [] as Cluster[];
+	try {
+		clusters = await window.withProgress({
+			location: ProgressLocation.Notification,
+		}, async (progress) => {
+			progress.report({
+				message: `Fetching Kafka cluster definitions from Red Hat...`,
+			});
+			return getRHOSAKClusters(session.accessToken);
 		});
-		return getRHOSAKClusters(session.accessToken);
-	});
+	} catch (error) {
+		if (error.response && error.response.status === 403) {
+			//Apparently this is not supposed to happened once we go in prod
+			const signUp = 'Sign Up';
+			const action = await window.showErrorMessage(`You have no ${RHOSAK_LABEL} account`, signUp);
+			if (action === signUp) {
+				openRHOSAKDashboard();
+			}
+			return;
+		}
+		throw error;
+	}
 	const foundServers = clusters.length > 0;
 	if (foundServers && existingClusters.length > 0) {
 		clusters = clusters.filter(mk => !existingClusters.includes(mk.bootstrap));
 	}
 	if (clusters.length > 0) {
 		// preemptively sign into MAS SSO, so the 2 sign-ins are chained, which makes things ... less awkward? really?
-		await vscode.authentication.getSession('redhat-mas-account-auth', ['openid'], { createIfNone: true });
+		await authentication.getSession('redhat-mas-account-auth', ['openid'], { createIfNone: true });
 		let event = {
 			name: "add_rhosak_clusters",
 			properties: {
@@ -59,12 +78,19 @@ async function configureClusters(clusterSettings: ClusterSettings, telemetryServ
 		telemetryService.send(event);
 		return clusters;
 	} else if (foundServers) {
-		vscode.window.showInformationMessage(`All ${RHOSAK_LABEL} Clusters have already been added`);
+		window.showInformationMessage(`All ${RHOSAK_LABEL} Clusters have already been added`);
 	} else {
 		// Should open the landing page
-		vscode.window.showWarningMessage(`No ${RHOSAK_LABEL} cluster available! Visit ${LANDING_PAGE}`);
+		const action = await window.showWarningMessage(`No ${RHOSAK_LABEL} cluster available!`, OPEN_DASHBOARD);
+		if (action === OPEN_DASHBOARD) {
+			openRHOSAKDashboard();
+		}
 	}
 	return [];
+}
+
+async function openRHOSAKDashboard() {
+	return commands.executeCommand('vscode.open', Uri.parse(LANDING_PAGE));
 }
 ​
 function createKafkaConfig(connectionOptions: ConnectionOptions): KafkaConfig {
@@ -75,7 +101,7 @@ function createKafkaConfig(connectionOptions: ConnectionOptions): KafkaConfig {
 		sasl: {
 			mechanism: 'oauthbearer',
 			oauthBearerProvider: async () => {
-				const session = await vscode.authentication.getSession('redhat-mas-account-auth', ['openid'], { createIfNone: true });
+				const session = await authentication.getSession('redhat-mas-account-auth', ['openid'], { createIfNone: true });
 				const token = session?.accessToken!;
 				return {
 					value: token
@@ -98,24 +124,19 @@ async function getRHOSAKClusters(token: string): Promise<Cluster[]> {
 		}
 	};
 	const clusters: Cluster[] = [];
-	try {
-		const response = await axios.get(KAFKA_API, requestConfig);
-		const kafkas = response.data;
-		if (kafkas && kafkas.items && kafkas.items.length > 0) {
-			kafkas.items.forEach((cluster: { id: string; status: string; name: string; bootstrapServerHost: any; }) => {
-				if (cluster?.status === 'ready') {
-					clusters.push({
-						id: cluster.id,
-						name: cluster.name,
-						bootstrap: cluster.bootstrapServerHost,
-						clusterProviderId: RHOSAK_CLUSTER_PROVIDER_ID,
-					});
-				}
-			});
-		}
-	} catch (err) {
-		vscode.window.showErrorMessage(`Failed to load ${RHOSAK_LABEL} clusters: ${err.message}`);
-		throw err;
+	const response = await axios.get(KAFKA_API, requestConfig);
+	const kafkas = response.data;
+	if (kafkas && kafkas.items && kafkas.items.length > 0) {
+		kafkas.items.forEach((cluster: { id: string; status: string; name: string; bootstrapServerHost: any; }) => {
+			if (cluster?.status === 'ready') {
+				clusters.push({
+					id: cluster.id,
+					name: cluster.name,
+					bootstrap: cluster.bootstrapServerHost,
+					clusterProviderId: RHOSAK_CLUSTER_PROVIDER_ID,
+				});
+			}
+		});
 	}
 	return clusters;
 }
