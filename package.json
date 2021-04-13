@@ -32,18 +32,22 @@
 				}
 			]
 		},
-		"commands":[{
-			"command": "rhoas.open.RHOSAKDashboard",
-			"category": "Red Hat",
-			"title": "Open Red Hat OpenShift Streams for Apache Kafka Dashboard"
-		}],
-		"view/item/context": [
+		"commands": [
 			{
 				"command": "rhoas.open.RHOSAKDashboard",
-				"when": "view == kafkaExplorer && viewItem =~ /^cluster-rhosak$|^selectedCluster-rhosak$/ && !listMultiSelection",
-				"group": "0_rhosak"
+				"category": "Red Hat",
+				"title": "Open Red Hat OpenShift Streams for Apache Kafka Dashboard"
 			}
-		]
+		],
+		"menus": {
+			"view/item/context": [
+				{
+					"command": "rhoas.open.RHOSAKDashboard",
+					"when": "view == kafkaExplorer && viewItem =~ /^cluster-rhosak$|^selectedCluster-rhosak$/ && !listMultiSelection",
+					"group": "0_rhosak"
+				}
+			]
+		}
 	},
 	"extensionDependencies": [
 		"jeppeandersen.vscode-kafka",
