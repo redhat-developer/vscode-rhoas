@@ -36,7 +36,14 @@
 			"command": "rhoas.open.RHOSAKDashboard",
 			"category": "Red Hat",
 			"title": "Open Red Hat OpenShift Streams for Apache Kafka Dashboard"
-		}]
+		}],
+		"view/item/context": [
+			{
+				"command": "rhoas.open.RHOSAKDashboard",
+				"when": "view == kafkaExplorer && viewItem == cluster && !listMultiSelection",
+				"group": "1_kafka"
+			}
+		]
 	},
 	"extensionDependencies": [
 		"jeppeandersen.vscode-kafka",
