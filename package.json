@@ -40,8 +40,8 @@
 		"view/item/context": [
 			{
 				"command": "rhoas.open.RHOSAKDashboard",
-				"when": "view == kafkaExplorer && viewItem == cluster && !listMultiSelection",
-				"group": "1_kafka"
+				"when": "view == kafkaExplorer && viewItem =~ /^cluster-rhosak$|^selectedCluster-rhosak$/ && !listMultiSelection",
+				"group": "0_rhosak"
 			}
 		]
 	},
