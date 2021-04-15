@@ -13,7 +13,7 @@ export interface Cluster extends ClusterIdentifier, ConnectionOptions {
 }
 ​
 export interface ClusterSettings {
-    getAll(): { bootstrap: string }[]
+    getAll(): { bootstrap: string, name: string }[]
 }
 ​
 export interface KafkaExtensionParticipant {

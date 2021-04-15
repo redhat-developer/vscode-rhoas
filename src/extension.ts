@@ -7,11 +7,14 @@ import { getTelemetryService, TelemetryService } from "@redhat-developer/vscode-
 const KAFKA_API = 'https://api.stage.openshift.com/api/managed-services-api/v1/kafkas';
 const LANDING_PAGE = 'https://cloud.redhat.com/beta/application-services/openshift-streams';
 ​const OPEN_RHOSAK_DASHBOARD_COMMAND = 'rhoas.open.RHOSAKDashboard';
+
 export async function activate(context: ExtensionContext): Promise<KafkaExtensionParticipant> {
 	let telemetryService: TelemetryService = await getTelemetryService("redhat.vscode-rhoas");
 	telemetryService.sendStartupEvent();
 	context.subscriptions.push(
-		commands.registerCommand(OPEN_RHOSAK_DASHBOARD_COMMAND, openRHOSAKDashboard)
+		commands.registerCommand(OPEN_RHOSAK_DASHBOARD_COMMAND, () => {
+			openRHOSAKDashboard(telemetryService, "Manual invocation");
+		})
 	);
 	return getRHOSAKClusterProvider(telemetryService);
 }
@@ -39,7 +42,8 @@ async function configureClusters(clusterSettings: ClusterSettings, telemetryServ
 		window.showWarningMessage('You need to log into Red Hat first!');
 		return [];
 	}
-	const existingClusters = clusterSettings.getAll().map(cluster => cluster.bootstrap);
+	const existingClusterUrls = clusterSettings.getAll().map(cluster => cluster.bootstrap);
+	const existingNames = clusterSettings.getAll().map(cluster => cluster.name);
 	let clusters = [] as Cluster[];
 	try {
 		clusters = await window.withProgress({
@@ -48,29 +52,36 @@ async function configureClusters(clusterSettings: ClusterSettings, telemetryServ
 			progress.report({
 				message: `Fetching Kafka cluster definitions from Red Hat...`,
 			});
-			return getRHOSAKClusters(session.accessToken);
+			return getRHOSAKClusters(session.accessToken, existingNames);
 		});
 	} catch (error) {
+		let event = {	
+			name: "rhoas.add.rhosak.clusters.failure",
+			properties: {
+				"error": `${error}`
+			}
+		};
+		telemetryService.send(event);
 		if (error.response && error.response.status === 403) {
 			//Apparently this is not supposed to happened once we go in prod
 			const signUp = 'Sign Up';
 			const action = await window.showErrorMessage(`You have no ${RHOSAK_LABEL} account`, signUp);
 			if (action === signUp) {
-				openRHOSAKDashboard();
+				openRHOSAKDashboard(telemetryService, "Sign-up");
 			}
 			return;
 		}
 		throw error;
 	}
 	const foundServers = clusters.length > 0;
-	if (foundServers && existingClusters.length > 0) {
-		clusters = clusters.filter(mk => !existingClusters.includes(mk.bootstrap));
+	if (foundServers && existingClusterUrls.length > 0) {
+		clusters = clusters.filter(mk => !existingClusterUrls.includes(mk.bootstrap));
 	}
 	if (clusters.length > 0) {
 		// preemptively sign into MAS SSO, so the 2 sign-ins are chained, which makes things ... less awkward? really?
 		await authentication.getSession('redhat-mas-account-auth', ['openid'], { createIfNone: true });
 		let event = {
-			name: "add_rhosak_clusters",
+			name: "rhoas.add.rhosak.clusters",
 			properties: {
 				"clusters": clusters.length
 			}
@@ -83,13 +94,20 @@ async function configureClusters(clusterSettings: ClusterSettings, telemetryServ
 		// Should open the landing page
 		const action = await window.showWarningMessage(`No ${RHOSAK_LABEL} cluster available!`, OPEN_DASHBOARD);
 		if (action === OPEN_DASHBOARD) {
-			openRHOSAKDashboard();
+			openRHOSAKDashboard(telemetryService, "No clusters");
 		}
 	}
 	return [];
 }
 
-async function openRHOSAKDashboard() {
+async function openRHOSAKDashboard(telemetryService:TelemetryService, reason: string) {
+	let event = {
+		name: "rhoas.open.rhosak.dashboard",
+		properties: {
+			"reason": reason
+		}
+	};
+	telemetryService.send(event);
 	return commands.executeCommand('vscode.open', Uri.parse(LANDING_PAGE));
 }
 ​
@@ -111,7 +129,7 @@ function createKafkaConfig(connectionOptions: ConnectionOptions): KafkaConfig {
 	};
 }
 ​
-async function getRHOSAKClusters(token: string): Promise<Cluster[]> {
+async function getRHOSAKClusters(token: string, existingNames: string[]): Promise<Cluster[]> {
 	let requestConfig = {
 		params: {
 			orderBy: 'name asc'
@@ -131,7 +149,7 @@ async function getRHOSAKClusters(token: string): Promise<Cluster[]> {
 			if (cluster?.status === 'ready') {
 				clusters.push({
 					id: cluster.id,
-					name: cluster.name,
+					name: uniquify(cluster.name, existingNames),
 					bootstrap: cluster.bootstrapServerHost,
 					clusterProviderId: RHOSAK_CLUSTER_PROVIDER_ID,
 				});
@@ -143,3 +161,16 @@ async function getRHOSAKClusters(token: string): Promise<Cluster[]> {
 ​
 // this method is called when your extension is deactivated
 export function deactivate() { }
+
+function uniquify(name: string, existingNames: string[]): string {
+	if (!existingNames || existingNames.length === 0) {
+		return name;
+	}
+	let uniqueName = name;
+	let i = 1;
+	while(existingNames.includes(uniqueName)) {
+		i++;
+		uniqueName = `${name} ${i}`;
+	}
+	return uniqueName;
+}
