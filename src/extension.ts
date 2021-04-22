@@ -4,23 +4,21 @@ import { Cluster, KafkaExtensionParticipant, ClusterSettings, ConnectionOptions,
 ​
 import { getTelemetryService, TelemetryService } from "@redhat-developer/vscode-redhat-telemetry";
 ​
-const KAFKA_API = 'https://api.stage.openshift.com/api/managed-services-api/v1/kafkas';
-const LANDING_PAGE = 'https://cloud.redhat.com/beta/application-services/openshift-streams';
+const KAFKA_API = 'https://api.openshift.com/api/managed-services-api/v1/kafkas';
+const LANDING_PAGE = 'https://cloud.redhat.com/beta/application-services/streams';
 ​const OPEN_RHOSAK_DASHBOARD_COMMAND = 'rhoas.open.RHOSAKDashboard';
 
 export async function activate(context: ExtensionContext): Promise<KafkaExtensionParticipant> {
 	let telemetryService: TelemetryService = await getTelemetryService("redhat.vscode-rhoas");
 	telemetryService.sendStartupEvent();
 	context.subscriptions.push(
-		commands.registerCommand(OPEN_RHOSAK_DASHBOARD_COMMAND, () => {
-			openRHOSAKDashboard(telemetryService, "Manual invocation");
+		commands.registerCommand(OPEN_RHOSAK_DASHBOARD_COMMAND, (cluster?: Cluster) => {
+			openRHOSAKDashboard(telemetryService, "Manual invocation", cluster);
 		})
 	);
 	return getRHOSAKClusterProvider(telemetryService);
 }
 
-const UNAUTHORIZED = []; 
-​
 const RHOSAK_CLUSTER_PROVIDER_ID = "rhosak";
 const RHOSAK_LABEL = "Red Hat OpenShift Streams for Apache Kafka";
 ​const OPEN_DASHBOARD = 'Open Dashboard';
@@ -100,15 +98,19 @@ async function configureClusters(clusterSettings: ClusterSettings, telemetryServ
 	return [];
 }
 
-async function openRHOSAKDashboard(telemetryService:TelemetryService, reason: string) {
+async function openRHOSAKDashboard(telemetryService:TelemetryService, reason: string, cluster?:Cluster) {
 	let event = {
 		name: "rhoas.open.rhosak.dashboard",
 		properties: {
 			"reason": reason
 		}
 	};
+	let page = LANDING_PAGE;
+	if (cluster?.id) {
+		page = `${page}/kafkas/${cluster.id}`;
+	}
 	telemetryService.send(event);
-	return commands.executeCommand('vscode.open', Uri.parse(LANDING_PAGE));
+	return commands.executeCommand('vscode.open', Uri.parse(page));
 }
 ​
 function createKafkaConfig(connectionOptions: ConnectionOptions): KafkaConfig {
