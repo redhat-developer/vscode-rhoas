@@ -20,6 +20,12 @@ npx vsce package
 Install the generated vscode-rhoas-*.vsix file.
 
 ## CI Builds
-- Go to [vscode-rhoas Gitlab pipelines page](https://gitlab.cee.redhat.com/beaverama/vscode-rhoas/-/pipelines?page=1&scope=all&status=success&ref=main), 
-- download and unzip the latest artifact
+- Go to the [CI Workflow](https://github.com/redhat-developer/vscode-rhoas/actions?query=branch%3Amain+is%3Asuccess++) page, 
+- Click on the latest successful build
+- Download and unzip the latest vscode-rhoas artifact
 - Install the vscode-rhoas-*.vsix file.
+
+## License
+Copyright (c) Red Hat, Inc. All rights reserved.
+
+Licensed under the [MIT](LICENSE.txt) license.

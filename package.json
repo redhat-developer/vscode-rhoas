@@ -3,16 +3,17 @@
 	"publisher": "redhat",
 	"author": "Red Hat",
 	"displayName": "Red Hat OpenShift Application Services",
-	"description": "Contributes `Red Hat OpenShift Streams For Apache Kafka` clusters to vscode-kafka",
+	"description": "Contributes `Red Hat OpenShift Streams For Apache Kafka` clusters to Tools for Apache Kafka",
 	"version": "0.0.1",
 	"engines": {
 		"vscode": "^1.54.0"
 	},
+	"license": "MIT",
 	"icon": "icons/icon128.png",
 	"preview": true,
 	"repository": {
 		"type": "git",
-		"url": "https://gitlab.cee.redhat.com/beaverama/vscode-rhoas"
+		"url": "https://github.com/redhat-developer/vscode-rhoas"
 	},
 	"categories": [
 		"Other"
