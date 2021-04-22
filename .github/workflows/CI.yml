@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+ build:
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12.x
+      - run: npm install
+      - name: Lint
+        run: npm run lint
+      - name: Build .vsix package
+        if: matrix.os != 'ubuntu-latest'
+        run: npm run package
+      - name: Build .vsix package on Linux
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          npx vsce package -o vscode-rhoas-${VERSION}-${GITHUB_RUN_ID}-${GITHUB_RUN_NUMBER}.vsix
+      # - name: Run tests
+      #   uses: GabrielBB/xvfb-action@v1.0
+      #   with:
+      #     run: npm test
+      - name: Upload linux-built vsix
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v2
+        with:
+          name: vscode-rhoas
+          path: vscode-rhoas*.vsix
+
