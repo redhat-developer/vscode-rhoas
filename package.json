@@ -9,8 +9,6 @@
 		"vscode": "^1.54.0"
 	},
 	"icon": "icons/icon128.png",
-	"segmentWriteKey": "eKBn0xqKQcQJVhUOW0vdQtNQiK791OLa",
-	"segmentWriteKeyDebug": "eKBn0xqKQcQJVhUOW0vdQtNQiK791OLa",
 	"preview": true,
 	"repository": {
 		"type": "git",
@@ -86,7 +84,7 @@
 		"webpack-cli": "^4.4.0"
 	},
 	"dependencies": {
-		"@redhat-developer/vscode-redhat-telemetry": "0.0.13",
+		"@redhat-developer/vscode-redhat-telemetry": "0.0.15",
 		"axios": "^0.21.1"
 	}
 }
