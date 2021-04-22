@@ -12,8 +12,14 @@ export async function activate(context: ExtensionContext): Promise<KafkaExtensio
 	let telemetryService: TelemetryService = await getTelemetryService("redhat.vscode-rhoas");
 	telemetryService.sendStartupEvent();
 	context.subscriptions.push(
-		commands.registerCommand(OPEN_RHOSAK_DASHBOARD_COMMAND, (cluster?: Cluster) => {
-			openRHOSAKDashboard(telemetryService, "Manual invocation", cluster);
+		commands.registerCommand(OPEN_RHOSAK_DASHBOARD_COMMAND, (clusterItem?: any) => {
+			let clusterId:string|undefined;
+			if (clusterItem?.cluster?.id) {
+				clusterId = clusterItem.cluster.id;
+			} else if (clusterItem.id) {
+				clusterId = clusterItem.id;
+			}
+			openRHOSAKDashboard(telemetryService, "Manual invocation", clusterId);
 		})
 	);
 	return getRHOSAKClusterProvider(telemetryService);
@@ -98,7 +104,7 @@ async function configureClusters(clusterSettings: ClusterSettings, telemetryServ
 	return [];
 }
 
-async function openRHOSAKDashboard(telemetryService:TelemetryService, reason: string, cluster?:Cluster) {
+async function openRHOSAKDashboard(telemetryService:TelemetryService, reason: string, clusterId?:string) {
 	let event = {
 		name: "rhoas.open.rhosak.dashboard",
 		properties: {
@@ -106,8 +112,8 @@ async function openRHOSAKDashboard(telemetryService:TelemetryService, reason: st
 		}
 	};
 	let page = LANDING_PAGE;
-	if (cluster?.id) {
-		page = `${page}/kafkas/${cluster.id}`;
+	if (clusterId) {
+		page = `${page}/kafkas/${clusterId}`;
 	}
 	telemetryService.send(event);
 	return commands.executeCommand('vscode.open', Uri.parse(page));
