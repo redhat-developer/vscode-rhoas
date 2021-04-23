@@ -19,7 +19,8 @@ export async function activate(context: ExtensionContext): Promise<KafkaExtensio
 			} else if (clusterItem.id) {
 				clusterId = clusterItem.id;
 			}
-			openRHOSAKDashboard(telemetryService, "Manual invocation", clusterId);
+			const reason = clusterId?"Cluster page":"Manual invocation";
+			openRHOSAKDashboard(telemetryService, reason, clusterId);
 		})
 	);
 	return getRHOSAKClusterProvider(telemetryService);
@@ -93,7 +94,7 @@ async function configureClusters(clusterSettings: ClusterSettings, telemetryServ
 		telemetryService.send(event);
 		return clusters;
 	} else if (foundServers) {
-		window.showInformationMessage(`All ${RHOSAK_LABEL} Clusters have already been added`);
+		window.showInformationMessage(`All ${RHOSAK_LABEL} clusters have already been added`);
 	} else {
 		// Should open the landing page
 		const action = await window.showWarningMessage(`No ${RHOSAK_LABEL} cluster available!`, OPEN_DASHBOARD);

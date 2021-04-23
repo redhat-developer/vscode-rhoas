@@ -1,6 +1,6 @@
 # Data collection
 
-vscode-rhoas has opt-in telemetry collection, provided by [vscode-commons](https://github.com/redhat-developer/vscode-commons).
+`Red Hat OpenShift Application Services` has opt-in telemetry collection, provided by [vscode-commons](https://github.com/redhat-developer/vscode-commons).
 
 ## What's included in the vscode-xml telemetry data
 

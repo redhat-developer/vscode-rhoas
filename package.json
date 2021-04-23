@@ -3,7 +3,7 @@
 	"publisher": "redhat",
 	"author": "Red Hat",
 	"displayName": "Red Hat OpenShift Application Services",
-	"description": "Contributes `Red Hat OpenShift Streams For Apache Kafka` clusters to Tools for Apache Kafka",
+	"description": "Contributes `Red Hat OpenShift Streams For Apache Kafka` clusters to `Tools for Apache Kafka`",
 	"version": "0.0.1",
 	"engines": {
 		"vscode": "^1.54.0"
