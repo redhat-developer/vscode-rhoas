@@ -6,7 +6,7 @@ You can either:
 1. search for and install `Red Hat OpenShift Application Services` directly from the `Extensions` view, it will automatically install its dependencies, [Tools for Apache Kafka](https://github.com/jlandersen/vscode-kafka) and [Red Hat Authentication](https://github.com/redhat-developer/vscode-redhat-account)
 2. in the Kafka explorer from `Tools for Apache Kafka`, click on the `Discover Kafka Providers` command, which will automatically perform a search for Kafka providers (see option 1).
 
-<img title="Discover Kafka Providers" src="images/discover-cluster-providers.png" width="400" />
+<img title="Discover Kafka Providers" src="images/discover-cluster-providers.png" width="650" />
 
 
 ### Adding a cluster
@@ -16,7 +16,7 @@ Once `Red Hat OpenShift Application Services` is installed, open the Kafka view.
 
 You will be asked to log into your Red Hat account first:
 
-<img title="Sign into Red Hat" src="images/signin1.png" width="170"  />
+<img title="Sign into Red Hat" src="images/signin1.png" width="350"  />
 
 This will open a browser page to sign into https://sso.redhat.com. Once you signed-in or created an account, your session token will be stored in the IDE, so it can be reused (and refreshed) if necessary.
 
@@ -30,7 +30,7 @@ If no clusters have been created yet, a message will provide you with a link to 
 
 If you already created your Apache Kafka cluster, the extension will require to you to sign into a second SSO, so it can connect to that cluster via SASL/OAUTHBEARER.
 
-<img title="Sign into Red Hat OpenShift Application Services" src="images/signin2.png" width="170"  />
+<img title="Sign into Red Hat OpenShift Application Services" src="images/signin2.png" width="350"  />
 
 That second sign-in is transparent though, you won't need to manually log in.
 
