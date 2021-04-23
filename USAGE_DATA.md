@@ -1,8 +1,8 @@
 # Data collection
 
-`Red Hat OpenShift Application Services` has opt-in telemetry collection, provided by [vscode-commons](https://github.com/redhat-developer/vscode-commons).
+`Red Hat OpenShift Application Services` has opt-in telemetry collection, provided by [`Red Hat Commons`](https://github.com/redhat-developer/vscode-commons).
 
-## What's included in the vscode-xml telemetry data
+## What's included in the `Red Hat OpenShift Application Services` telemetry data
 
  * A telemetry event is sent every time new Kafka clusters have been added
     - includes the number of added clusters
@@ -13,7 +13,7 @@
 ## What's included in the general telemetry data
 
 Please see the
-[vscode-commons data collection information](https://github.com/redhat-developer/vscode-commons/blob/master/USAGE_DATA.md#other-extensions)
+[`Red Hat Commons` data collection information](https://github.com/redhat-developer/vscode-commons/blob/master/USAGE_DATA.md#other-extensions)
 for information on what data it collects.
 
 ## How to opt in or out
