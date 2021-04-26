@@ -49,3 +49,7 @@ Please read the [`Tools for Apache Kafka` documentation](https://github.com/jlan
 ![](images/open-dashboard-command.png)
 
 ![](images/cluster-dashboard.png)
+
+### About ephemeral clusters
+
+Please be aware ephemeral [`Red Hat OpenShift Streams For Apache Kafka`](https://cloud.redhat.com/beta/application-services/streams/kafkas) clusters are not automatically purged from the Kafka settings after they have been deprovisioned. You will need to [delete](https://github.com/jlandersen/vscode-kafka/blob/master/docs/Explorer.md#delete) them manually from the Kafka Explorer.
