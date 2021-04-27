@@ -16,7 +16,7 @@ export async function activate(context: ExtensionContext): Promise<KafkaExtensio
 			let clusterId:string|undefined;
 			if (clusterItem?.cluster?.id) {
 				clusterId = clusterItem.cluster.id;
-			} else if (clusterItem.id) {
+			} else if (clusterItem?.id) {
 				clusterId = clusterItem.id;
 			}
 			const reason = clusterId?"Cluster page":"Manual invocation";
