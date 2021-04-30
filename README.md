@@ -1,3 +1,4 @@
+[![Marketplace Version](https://vsmarketplacebadge.apphb.com/version/redhat.vscode-rhoas.svg "Current Release")](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-rhoas)
 # Red Hat OpenShift Application Services
 
 This is the gateway Visual Studio Code extension for accessing `Red Hat OpenShift Application Services`.
