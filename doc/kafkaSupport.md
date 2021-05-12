@@ -50,8 +50,8 @@ Please read the [`Tools for Apache Kafka` documentation](https://github.com/jlan
 If you want to create a new remote cluster, you can do so by clicking on the `Create new remote cluster` button, after trying to discover existing clusters. You will then need to select:
 - a cluster name,
 - the cloud provider (only `Amazon Web Services` is available at the moment),
-- the cloud region (only `us-east-1` is available at the moment),
-- multizone (`true` is the only choice at the moment).
+- the cloud region (only `US East, N. Virginia` is available at the moment),
+- availability zones (only `Multi` is available at the moment).
 
 Creating the cluster usually takes 3 to 4 minutes. 
 A progress dialog will be displayed while the cluster is being created. 

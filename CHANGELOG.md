@@ -2,7 +2,7 @@
 
 All notable changes to the `Red Hat OpenShift Application Services` extension will be documented in this file.
 
-## 0.0.3 (23/08/2021)
+## 0.0.3 (24/08/2021)
 
 - Create and delete remote RHOSAK clusters [#3](https://github.com/redhat-developer/vscode-rhoas/pull/3).
 - Update logo

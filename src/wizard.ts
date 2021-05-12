@@ -153,13 +153,13 @@ async function inputRegion(input: MultiStepInput, state: Partial<NewClusterState
 }
 
 async function inputMultiZone(input: MultiStepInput, state: Partial<NewClusterState>) {
-    const choices: QuickPickItem[] = [{label:'true'}];
+    const choices: QuickPickItem[] = [{label:'Multi'}];
     state.multi_az = choices[0] === (await input.showQuickPick({
-        title: "Multizone",
+        title: "Availability zones",
         step: input.getStepNumber(),
         totalSteps: state.totalSteps,
         items: choices,
         activeItem: choices.find(item => item.label === `${state.multi_az}`),
-        prompt: 'Multizone',
+        prompt: 'Availability zones',
     }));
 }
