@@ -1,38 +1,24 @@
-import axios from 'axios';
-import {authentication, commands, ExtensionContext, ProgressLocation, Uri, window } from 'vscode';
-import { Cluster, KafkaExtensionParticipant, ClusterSettings, ConnectionOptions, KafkaConfig, ClusterProviderParticipant } from './vscodekafka-api';
-​
+/* eslint-disable @typescript-eslint/naming-convention */
 import { getRedHatService, TelemetryService } from "@redhat-developer/vscode-redhat-telemetry";
-​
-const KAFKA_API = 'https://api.openshift.com/api/managed-services-api/v1/kafkas';
-const LANDING_PAGE = 'https://cloud.redhat.com/beta/application-services/streams';
-​const OPEN_RHOSAK_DASHBOARD_COMMAND = 'rhoas.open.RHOSAKDashboard';
+import { authentication, commands, ExtensionContext, ProgressLocation, window } from 'vscode';
+import { openRHOSAKDashboard, registerCommands } from './commands';
+import { rhosakService } from './rhosakService';
+import { convertAll } from './utils';
+import { Cluster, ClusterProviderParticipant, ClusterSettings, ConnectionOptions, KafkaConfig, KafkaExtensionParticipant } from './vscodekafka-api';
+
+const RHOSAK_LABEL = "Red Hat OpenShift Streams for Apache Kafka";
+const OPEN_DASHBOARD = 'Open Dashboard';
 
 export async function activate(context: ExtensionContext): Promise<KafkaExtensionParticipant> {
 	let telemetryService: TelemetryService = await (await getRedHatService(context)).getTelemetryService();
 	telemetryService.sendStartupEvent();
-	context.subscriptions.push(
-		commands.registerCommand(OPEN_RHOSAK_DASHBOARD_COMMAND, (clusterItem?: any) => {
-			let clusterId:string|undefined;
-			if (clusterItem?.cluster?.id) {
-				clusterId = clusterItem.cluster.id;
-			} else if (clusterItem?.id) {
-				clusterId = clusterItem.id;
-			}
-			const reason = clusterId?"Cluster page":"Manual invocation";
-			openRHOSAKDashboard(telemetryService, reason, clusterId);
-		})
-	);
+	registerCommands(context, telemetryService);
 	return getRHOSAKClusterProvider(telemetryService);
 }
 
-const RHOSAK_CLUSTER_PROVIDER_ID = "rhosak";
-const RHOSAK_LABEL = "Red Hat OpenShift Streams for Apache Kafka";
-​const OPEN_DASHBOARD = 'Open Dashboard';
-
 function getRHOSAKClusterProvider(telemetryService: TelemetryService): KafkaExtensionParticipant {
 	return {
-		getClusterProviderParticipant(clusterProviderId: string): ClusterProviderParticipant {
+		getClusterProviderParticipant(_clusterProviderId: string): ClusterProviderParticipant {
 			return {
 				configureClusters: async (clusterSettings: ClusterSettings): Promise<Cluster[] | undefined> => configureClusters(clusterSettings, telemetryService),
 				createKafkaConfig: (connectionOptions: ConnectionOptions): KafkaConfig => createKafkaConfig(connectionOptions)
@@ -47,6 +33,7 @@ async function configureClusters(clusterSettings: ClusterSettings, telemetryServ
 		window.showWarningMessage('You need to log into Red Hat first!');
 		return [];
 	}
+	//console.log(`token:${session.accessToken}`);
 	const existingClusterUrls = clusterSettings.getAll().map(cluster => cluster.bootstrap);
 	const existingNames = clusterSettings.getAll().map(cluster => cluster.name);
 	let clusters = [] as Cluster[];
@@ -57,7 +44,8 @@ async function configureClusters(clusterSettings: ClusterSettings, telemetryServ
 			progress.report({
 				message: `Fetching Kafka cluster definitions from Red Hat...`,
 			});
-			return getRHOSAKClusters(session.accessToken, existingNames);
+			const rhosaks = (await rhosakService.listKafkas(session.accessToken)).filter(c => c.status === 'ready');
+			return convertAll(rhosaks, existingNames);
 		});
 	} catch (error) {
 		let event = {	
@@ -68,7 +56,7 @@ async function configureClusters(clusterSettings: ClusterSettings, telemetryServ
 		};
 		telemetryService.send(event);
 		if (error.response && error.response.status === 403) {
-			//Apparently this is not supposed to happened once we go in prod
+			//Apparently this is not supposed to happen once we go in prod
 			const signUp = 'Sign Up';
 			const action = await window.showErrorMessage(`You have no ${RHOSAK_LABEL} account`, signUp);
 			if (action === signUp) {
@@ -105,21 +93,6 @@ async function configureClusters(clusterSettings: ClusterSettings, telemetryServ
 	return [];
 }
 
-async function openRHOSAKDashboard(telemetryService:TelemetryService, reason: string, clusterId?:string) {
-	let event = {
-		name: "rhoas.open.rhosak.dashboard",
-		properties: {
-			"reason": reason
-		}
-	};
-	let page = LANDING_PAGE;
-	if (clusterId) {
-		page = `${page}/kafkas/${clusterId}`;
-	}
-	telemetryService.send(event);
-	return commands.executeCommand('vscode.open', Uri.parse(page));
-}
-​
 function createKafkaConfig(connectionOptions: ConnectionOptions): KafkaConfig {
 	return {
 		clientId: "vscode-kafka",
@@ -138,48 +111,8 @@ function createKafkaConfig(connectionOptions: ConnectionOptions): KafkaConfig {
 	};
 }
 ​
-async function getRHOSAKClusters(token: string, existingNames: string[]): Promise<Cluster[]> {
-	let requestConfig = {
-		params: {
-			orderBy: 'name asc'
-		},
-		headers: {
-			// eslint-disable-next-line @typescript-eslint/naming-convention
-			'Authorization': `Bearer ${token}`,
-			// eslint-disable-next-line @typescript-eslint/naming-convention
-			'Accept': 'application/json'
-		}
-	};
-	const clusters: Cluster[] = [];
-	const response = await axios.get(KAFKA_API, requestConfig);
-	const kafkas = response.data;
-	if (kafkas && kafkas.items && kafkas.items.length > 0) {
-		kafkas.items.forEach((cluster: { id: string; status: string; name: string; bootstrapServerHost: any; }) => {
-			if (cluster?.status === 'ready') {
-				clusters.push({
-					id: cluster.id,
-					name: uniquify(cluster.name, existingNames),
-					bootstrap: cluster.bootstrapServerHost,
-					clusterProviderId: RHOSAK_CLUSTER_PROVIDER_ID,
-				});
-			}
-		});
-	}
-	return clusters;
-}
-​
 // this method is called when your extension is deactivated
 export function deactivate() { }
 
-function uniquify(name: string, existingNames: string[]): string {
-	if (!existingNames || existingNames.length === 0) {
-		return name;
-	}
-	let uniqueName = name;
-	let i = 1;
-	while(existingNames.includes(uniqueName)) {
-		i++;
-		uniqueName = `${name} ${i}`;
-	}
-	return uniqueName;
-}
+
+
