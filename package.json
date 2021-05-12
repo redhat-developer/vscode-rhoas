@@ -6,7 +6,7 @@
 	"description": "Contributes `Red Hat OpenShift Streams For Apache Kafka` clusters to `Tools for Apache Kafka`",
 	"version": "0.0.2",
 	"engines": {
-		"vscode": "^1.54.0"
+		"vscode": "^1.52.0"
 	},
 	"license": "MIT",
 	"icon": "icons/icon128.png",
@@ -68,15 +68,15 @@
 		"test": "node ./out/test/runTest.js"
 	},
 	"devDependencies": {
-		"@types/vscode": "^1.54.0",
+		"@types/vscode": "^1.52.0",
 		"@types/glob": "^7.1.3",
-		"@types/mocha": "^8.0.4",
+		"@types/mocha": "^8.2.2",
 		"@types/node": "^12.11.7",
 		"eslint": "^7.19.0",
 		"@typescript-eslint/eslint-plugin": "^4.14.1",
 		"@typescript-eslint/parser": "^4.14.1",
 		"glob": "^7.1.6",
-		"mocha": "^8.2.1",
+		"mocha": "^8.2.2",
 		"typescript": "^4.2.3",
 		"vscode-test": "^1.5.0",
 		"ts-loader": "^8.0.14",
@@ -84,7 +84,7 @@
 		"webpack-cli": "^4.4.0"
 	},
 	"dependencies": {
-		"@redhat-developer/vscode-redhat-telemetry": "0.1.1",
-		"axios": "^0.21.1"
+		"@redhat-developer/vscode-redhat-telemetry": "0.2.0",
+		"@rhoas/kafka-management-sdk": "0.9.0"
 	}
 }
