@@ -2,14 +2,14 @@ import axios from 'axios';
 import {authentication, commands, ExtensionContext, ProgressLocation, Uri, window } from 'vscode';
 import { Cluster, KafkaExtensionParticipant, ClusterSettings, ConnectionOptions, KafkaConfig, ClusterProviderParticipant } from './vscodekafka-api';
 ​
-import { getTelemetryService, TelemetryService } from "@redhat-developer/vscode-redhat-telemetry";
+import { getRedHatService, TelemetryService } from "@redhat-developer/vscode-redhat-telemetry";
 ​
 const KAFKA_API = 'https://api.openshift.com/api/managed-services-api/v1/kafkas';
 const LANDING_PAGE = 'https://cloud.redhat.com/beta/application-services/streams';
 ​const OPEN_RHOSAK_DASHBOARD_COMMAND = 'rhoas.open.RHOSAKDashboard';
 
 export async function activate(context: ExtensionContext): Promise<KafkaExtensionParticipant> {
-	let telemetryService: TelemetryService = await getTelemetryService("redhat.vscode-rhoas");
+	let telemetryService: TelemetryService = await (await getRedHatService(context)).getTelemetryService();
 	telemetryService.sendStartupEvent();
 	context.subscriptions.push(
 		commands.registerCommand(OPEN_RHOSAK_DASHBOARD_COMMAND, (clusterItem?: any) => {
