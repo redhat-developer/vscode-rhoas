@@ -50,8 +50,7 @@
 	},
 	"extensionDependencies": [
 		"jeppeandersen.vscode-kafka",
-		"redhat.vscode-redhat-account",
-		"redhat.vscode-commons"
+		"redhat.vscode-redhat-account"
 	],
 	"main": "./dist/extension.js",
 	"activationEvents": [
@@ -85,7 +84,7 @@
 		"webpack-cli": "^4.4.0"
 	},
 	"dependencies": {
-		"@redhat-developer/vscode-redhat-telemetry": "0.0.15",
+		"@redhat-developer/vscode-redhat-telemetry": "0.1.1",
 		"axios": "^0.21.1"
 	}
 }
