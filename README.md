@@ -4,9 +4,9 @@
 This is the gateway Visual Studio Code extension for accessing `Red Hat OpenShift Application Services`.
 
 ## Red Hat OpenShift Streams For Apache Kafka
-Contributes `Red Hat OpenShift Streams For Apache Kafka` clusters to the [Tools for Apache Kafka](https://marketplace.visualstudio.com/items?itemName=jeppeandersen.vscode-kafka) VS Code extension.
-
+<img src="icons/icon128-rhosak.png" alt="Red Hat OpenShift Streams For Apache Kafka" width="48" align="left" style="padding:10px"/>Contributes `Red Hat OpenShift Streams For Apache Kafka` clusters to the [Tools for Apache Kafka](https://marketplace.visualstudio.com/items?itemName=jeppeandersen.vscode-kafka) VS Code extension.
 Learn more about `Red Hat OpenShift Streams For Apache Kafka` support in the [detailed documentation](doc/kafkaSupport.md).
+<br/><br/>
 
 ## Telemetry
 
