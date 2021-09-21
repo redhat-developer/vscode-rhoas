@@ -101,7 +101,7 @@
 		"webpack-cli": "^4.4.0"
 	},
 	"dependencies": {
-		"@redhat-developer/vscode-redhat-telemetry": "0.2.0",
-		"@rhoas/kafka-management-sdk": "0.12.2"
+		"@redhat-developer/vscode-redhat-telemetry": "0.4.2",
+		"@rhoas/kafka-management-sdk": "0.12.3"
 	}
 }
