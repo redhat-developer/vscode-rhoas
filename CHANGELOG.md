@@ -2,6 +2,10 @@
 
 All notable changes to the `Red Hat OpenShift Application Services` extension will be documented in this file.
 
+## 0.0.4 (22/09/2021)
+- Update vscode-redhat-telemetry to 0.4.2
+- Update kafka-management-sdk to 0.12.3
+
 ## 0.0.3 (24/08/2021)
 
 - Create and delete remote RHOSAK clusters [#3](https://github.com/redhat-developer/vscode-rhoas/pull/3).
