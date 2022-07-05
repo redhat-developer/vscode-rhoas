@@ -15,9 +15,11 @@ Read our [privacy statement](https://developers.redhat.com/article/tool-data-col
 This extension respects the `redhat.telemetry.enabled` setting, which you can learn more about at https://github.com/redhat-developer/vscode-redhat-telemetry#how-to-disable-telemetry-reporting
 
 ## Build
+You need Node.js 14.x or higher to build this extension.
+
 In a terminal, run:
 ```
-npm install
+npm ci
 npx vsce package
 ```
 

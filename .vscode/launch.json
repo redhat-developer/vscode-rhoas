@@ -18,6 +18,31 @@
 			"preLaunchTask": "${defaultBuildTask}"
 		},
 		{
+			"name": "Run Extension w/ Dependencies",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--extensionDevelopmentPath=${workspaceFolder}/../vscode-redhat-account",
+				"--extensionDevelopmentPath=${workspaceFolder}/../vscode-kafka",
+			],
+			"env": {
+				//"VSCODE_REDHAT_TELEMETRY_DEBUG": "true",
+				//"ALLOW_INSECURE_SSL": "true",
+				//"REDHAT_MK_UI": "https://qaprodauth.cloud.redhat.com/application-services/streams",
+				//"REDHAT_SSO_URL": "https://sso.stage.redhat.com/auth/realms/redhat-external/",
+				//"REDHAT_MAS_SSO_URL": "https://identity.api.stage.openshift.com/auth/realms/rhoas/",  
+				//"KAS_API_URL": "https://api.stage.openshift.com/"
+			},
+			"outFiles": [
+				"${workspaceFolder}/dist/**/*.js",
+				"${workspaceFolder}/../vscode-redhat-account/dist/**/*.js",
+				"${workspaceFolder}/../vscode-kafka/dist/**/*.js"
+			],
+			"preLaunchTask": "${defaultBuildTask}",
+		},
+		{
 			"name": "Extension Tests",
 			"type": "extensionHost",
 			"request": "launch",

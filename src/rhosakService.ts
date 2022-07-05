@@ -1,21 +1,23 @@
-import { CloudProvider, CloudProviderList, CloudRegion, Configuration, DefaultApi, KafkaRequest, KafkaRequestPayload } from "@rhoas/kafka-management-sdk";
+import { CloudProvider, CloudProviderList, CloudRegion, Configuration, DefaultApi, KafkaRequest, KafkaRequestPayload, SecurityApi } from "@rhoas/kafka-management-sdk";
 
 export namespace rhosakService {
 
-    const BASE_API = 'https://api.openshift.com';
-
-    let cloudProviders : CloudProvider[];
+    const BASE_API = process.env.KAS_API_URL ? process.env.KAS_API_URL : 'https://api.openshift.com';
+    console.log("BASE_API: " + BASE_API);
+    let cloudProviders: CloudProvider[];
     let cloudRegions = new Map<string, CloudRegion[]>();
 
-    export async function listKafkas(token: string):Promise<KafkaRequest[]> {
+    export async function listKafkas(token: string): Promise<KafkaRequest[]> {
+
         const apisService = getApisService(token);
+        console.log(token);
         const clusters: KafkaRequest[] = [];
         let page = 1;
         let response;
         let hasMore = true;
         try {
-            while(hasMore) {
-                response = await apisService.getKafkas( ''+page, '100', 'name asc');
+            while (hasMore) {
+                response = await apisService.getKafkas('' + page, '100', 'name asc');
                 const kafkas = response.data;
                 if (kafkas) {
                     clusters.push(...kafkas.items!);
@@ -31,12 +33,12 @@ export namespace rhosakService {
         return clusters;
     }
 
-    export async function createKafka(request: KafkaRequestPayload, token: string):Promise<KafkaRequest> {
+    export async function createKafka(request: KafkaRequestPayload, token: string): Promise<KafkaRequest> {
         const apisService = getApisService(token);
         try {
             const response = await apisService.createKafka(true, request);
             return response.data;
-        } catch( e) {
+        } catch (e: any) {
             console.log(e);
             if (e?.response?.data?.reason) {
                 throw new Error(`Failed to create a remote Kafka cluster: ${e.response.data.reason}`);
@@ -45,7 +47,7 @@ export namespace rhosakService {
         }
     }
 
-    export async function getCloudProviders(token: string):Promise<CloudProvider[]> {
+    export async function getCloudProviders(token: string): Promise<CloudProvider[]> {
         if (cloudProviders) {
             return cloudProviders;
         }
@@ -55,8 +57,8 @@ export namespace rhosakService {
         let response;
         let hasMore = true;
         try {
-            while(hasMore) {
-                response = await apisService.getCloudProviders( ''+page, '100');
+            while (hasMore) {
+                response = await apisService.getCloudProviders('' + page, '100');
                 const providersList = response.data;
                 if (providersList) {
                     _cloudProviders.push(...providersList.items!);
@@ -72,7 +74,7 @@ export namespace rhosakService {
         cloudProviders = _cloudProviders.filter(cp => cp.enabled);
         return cloudProviders;
     }
-    export async function getCloudRegions(cloudId: string, token: string):Promise<CloudRegion[]> {
+    export async function getCloudRegions(cloudId: string, token: string): Promise<CloudRegion[]> {
         if (cloudRegions.has(cloudId)) {
             return cloudRegions.get(cloudId)!;
         }
@@ -82,8 +84,8 @@ export namespace rhosakService {
         let response;
         let hasMore = true;
         try {
-            while(hasMore) {
-                response = await apisService.getCloudProviderRegions(cloudId, ''+page, '100');
+            while (hasMore) {
+                response = await apisService.getCloudProviderRegions(cloudId, '' + page, '100');
                 const regionsList = response.data;
                 if (regionsList) {
                     _cloudRegions.push(...regionsList.items!);
@@ -96,19 +98,20 @@ export namespace rhosakService {
             console.log(e);
             throw e;
         }
-        const regions = _cloudRegions.filter(cr => cr.enabled);
+        const regions = _cloudRegions.filter(cr => cr.enabled
+            && cr.capacity.find(rc => 'developer' === rc.instance_type));
         cloudRegions.set(cloudId, regions);
         return regions;
     }
 
-    export async function deleteKafka(id: string, token: string):Promise<void> {
+    export async function deleteKafka(id: string, token: string): Promise<void> {
         const apisService = getApisService(token);
         try {
             const response = await apisService.deleteKafkaById(id, true);
             if (response.data) {
                 throw response.data;
             };
-        } catch( e) {
+        } catch (e: any) {
             if (e?.response?.data?.reason) {
                 throw new Error(e.response.data.reason);
             }
@@ -117,10 +120,29 @@ export namespace rhosakService {
         }
     }
 
-    function getApisService(token: string) {
-        const apiConfig = new Configuration({
+    export async function getSSOProvider(): Promise<any> {
+        try {
+            const securityAPI = new SecurityApi(undefined, BASE_API);
+            const start = new Date().getTime();
+            const response = await securityAPI.getSsoProviders();
+            const end = new Date().getTime();
+            console.log(`getSSOProvider took ${end - start} ms`);
+            return response.data;
+        } catch (e: any) {
+            if (e?.response?.data?.reason) {
+                throw new Error(e.response.data.reason);
+            }
+            console.log(e);
+            throw e;
+        }
+    }
+
+    function getApisService(token?: string) {
+        const apiConfig = (token) ? new Configuration({
             basePath: BASE_API,
             accessToken: token
+        }) : new Configuration({
+            basePath: BASE_API,
         });
         return new DefaultApi(apiConfig);
     }

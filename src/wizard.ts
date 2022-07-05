@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { TelemetryEvent, TelemetryService } from "@redhat-developer/vscode-redhat-telemetry/lib";
-import { authentication, ProgressLocation, QuickPickItem, window } from "vscode";
+import { authentication, Progress, ProgressLocation, QuickPickItem, window } from "vscode";
 import { openRHOSAKDashboard } from "./commands";
 import { MultiStepInput, State } from "./multiStepInput";
 import { rhosakService } from "./rhosakService";
@@ -14,15 +14,15 @@ interface NewClusterState extends State {
     multi_az: boolean;
 }
 
-export async function createRemoteCluster(telemetryService:TelemetryService): Promise<Cluster[] | undefined> {
+export async function createRemoteCluster(telemetryService: TelemetryService): Promise<Cluster[] | undefined> {
     const session = await authentication.getSession('redhat-account-auth', ['openid'], { createIfNone: true });
-	
+
     const state = {
         cloud_provider: "aws",
         region: "us-east-1",
-        multi_az:true,
+        multi_az: true,
     } as NewClusterState;
-    
+
     await collectInputs(state, session.accessToken);
     if (!state.name) {
         return;
@@ -40,7 +40,7 @@ export async function createRemoteCluster(telemetryService:TelemetryService): Pr
             const cluster = await createClusterReq(telemetryService, session.accessToken, state);
             telemetryService.send(event);
             return cluster;
-        } catch (e) {
+        } catch (e: any) {
             event.properties.error = e.message;
             telemetryService.send(event);
             throw e;
@@ -48,49 +48,61 @@ export async function createRemoteCluster(telemetryService:TelemetryService): Pr
     }
 }
 
-async function createClusterReq(telemetryService:TelemetryService, token: string, state: NewClusterState): Promise<Cluster[]> {
-	const clusters: Cluster[] = [];
-	
+const estimatedTime = 4 * 60 + 30; // 4'30", in seconds
+const period = 5000;// in ms
+const increment = ((period / 1000) / estimatedTime) * 100;
+async function createClusterReq(telemetryService: TelemetryService, token: string, state: NewClusterState): Promise<Cluster[]> {
+    const clusters: Cluster[] = [];
+
     const cluster = await rhosakService.createKafka(state, token);
-	if (cluster?.status === 'accepted') {
+    if (cluster?.status === 'accepted') {
         openRHOSAKDashboard(telemetryService, "create cluster");
 
-		let newCluster = await window.withProgress({
-			location: ProgressLocation.Notification,
+        let newCluster = await window.withProgress({
+            location: ProgressLocation.Notification,
             cancellable: true
-		}, async (progress) => {
-			progress.report({
-				message: `Creating remote Kafka cluster '${state.name}'`,
-			});
-			return waitForCluster(cluster.id!, token, []);
-		});
-		if (newCluster) {
-			clusters.push(newCluster);
-		}
-	}
-	return clusters;
+        }, async (progress) => {
+            progress.report({
+                message: `Creating remote Kafka cluster '${state.name}'. This will take several minutes.`,
+            });
+            const startTime = Date.now();
+            return waitForCluster(cluster.id!, token, [], startTime, progress);
+        });
+        if (newCluster) {
+            clusters.push(newCluster);
+        }
+    }
+    return clusters;
 }
 
-async function waitForCluster(id: string, token: string, existingNames: string[]): Promise<Cluster> {
-	const newCluster = (await rhosakService.listKafkas(token)).find(cluster => id === cluster.id);
-	if (!newCluster) {
-		throw new Error(`Cannot find cluster ${id}`);
-	}
-	if (newCluster.status === 'failed') {
+async function waitForCluster(id: string, token: string, existingNames: string[], startTime: number, progress: Progress<{
+    message?: string | undefined;
+    increment?: number | undefined;
+}>): Promise<Cluster> {
+    const newCluster = (await rhosakService.listKafkas(token)).find(cluster => id === cluster.id);
+    if (!newCluster) {
+        throw new Error(`Cannot find cluster ${id}`);
+    }
+    if (newCluster.status === 'failed') {
         const reason = newCluster.failed_reason ? `: ${newCluster.failed_reason}` : '';
-		throw new Error(`Failed to provision remote cluster '${newCluster.name}'${reason}`);
-	} 
+        throw new Error(`Failed to provision remote cluster '${newCluster.name}'${reason}`);
+    }
     if (newCluster.status === 'deprovision' || newCluster.status === 'deleting') {
         throw new Error(`Remote cluster '${newCluster.name}' is being deleted.`);
     }
-	if (newCluster.status === 'ready') {
-		return convert(newCluster, existingNames);
-	}
-	return new Promise<Cluster> (resolve => {
-		setTimeout(() => {
-			resolve(waitForCluster(id, token, existingNames));
-		  }, 5000);
-	});
+    if (newCluster.status === 'ready') {
+        progress.report({ increment: 100 });
+        return convert(newCluster, existingNames);
+    }
+    return new Promise<Cluster>(resolve => {
+        setTimeout(() => {
+            // Report progress until 95% of the estimated time is reached
+            if (Date.now() < (startTime + (estimatedTime * 0.95) * 1000)) {
+                progress.report({ increment: increment });
+            }
+            resolve(waitForCluster(id, token, existingNames, startTime, progress));
+        }, period);
+    });
 }
 
 async function collectInputs(state: Partial<NewClusterState>, token: string) {
@@ -102,7 +114,7 @@ async function inputName(input: MultiStepInput, state: Partial<NewClusterState>,
         title: "Cluster name",
         step: input.getStepNumber(),
         totalSteps: state.totalSteps,
-        value: state.name?state.name:'',
+        value: state.name ? state.name : '',
         prompt: 'Cluster name',
         validate: validateName
     });
@@ -110,7 +122,7 @@ async function inputName(input: MultiStepInput, state: Partial<NewClusterState>,
 }
 
 const nameRegexp = new RegExp('^[a-z]([-a-z0-9]*[a-z0-9])?$');
-async function validateName(name :string): Promise<string | undefined>{
+async function validateName(name: string): Promise<string | undefined> {
     if (!name || name.trim().length === 0) {
         return "Name is required";
     }
@@ -122,8 +134,8 @@ async function validateName(name :string): Promise<string | undefined>{
 async function inputCloudProvider(input: MultiStepInput, state: Partial<NewClusterState>, token: string) {
     const providers = await rhosakService.getCloudProviders(token);
     const providersMap = new Map(providers.map(provider => [provider.display_name!, provider.id!]));
-    const choices = providers.map(provider => { return {label:provider.display_name!, id:provider.id!};} );
-    
+    const choices = providers.map(provider => { return { label: provider.display_name!, id: provider.id! }; });
+
     const cloudProviderLabel = (await input.showQuickPick({
         title: "Cloud Provider",
         step: input.getStepNumber(),
@@ -139,9 +151,9 @@ async function inputCloudProvider(input: MultiStepInput, state: Partial<NewClust
 async function inputRegion(input: MultiStepInput, state: Partial<NewClusterState>, token: string) {
     const regions = await rhosakService.getCloudRegions(state.cloud_provider!, token);
     const regionsMap = new Map(regions.map(region => [region.display_name!, region.id!]));
-    const choices = regions.map(region => { return {label:region.display_name!, id:region.id!};} );
+    const choices = regions.map(region => { return { label: region.display_name!, id: region.id! }; });
     const regionLabel = (await input.showQuickPick({
-        title: "Region", 
+        title: "Region",
         step: input.getStepNumber(),
         totalSteps: state.totalSteps,
         items: choices,
@@ -153,7 +165,7 @@ async function inputRegion(input: MultiStepInput, state: Partial<NewClusterState
 }
 
 async function inputMultiZone(input: MultiStepInput, state: Partial<NewClusterState>) {
-    const choices: QuickPickItem[] = [{label:'Multi'}];
+    const choices: QuickPickItem[] = [{ label: 'Multi' }];
     state.multi_az = choices[0] === (await input.showQuickPick({
         title: "Availability zones",
         step: input.getStepNumber(),

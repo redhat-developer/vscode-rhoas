@@ -6,24 +6,24 @@ import { createRemoteCluster } from './wizard';
 export const OPEN_RHOSAK_DASHBOARD_CMD = 'rhoas.open.RHOSAKDashboard';
 export const DELETE_RHOSAK_CLUSTER_CMD = 'rhoas.delete.RHOSAKCluster';
 export const CREATE_RHOSAK_CLUSTER_CMD = 'rhoas.create.RHOSAKCluster';
-const LANDING_PAGE = 'https://cloud.redhat.com/beta/application-services/streams';
+const LANDING_PAGE = process.env.REDHAT_MK_UI ? process.env.REDHAT_MK_UI : 'https://cloud.redhat.com/beta/application-services/streams';
 
-export function registerCommands (context: ExtensionContext, telemetryService:TelemetryService ) {
-    context.subscriptions.push(
+export function registerCommands(context: ExtensionContext, telemetryService: TelemetryService) {
+	context.subscriptions.push(
 		commands.registerCommand(OPEN_RHOSAK_DASHBOARD_CMD, (clusterItem?: any) => {
-			let clusterId:string|undefined;
+			let clusterId: string | undefined;
 			if (clusterItem?.cluster?.id) {
 				clusterId = clusterItem.cluster.id;
 			} else if (clusterItem?.id) {
 				clusterId = clusterItem.id;
 			}
-			const reason = clusterId?"Cluster page":"Manual invocation";
+			const reason = clusterId ? "Cluster page" : "Manual invocation";
 			openRHOSAKDashboard(telemetryService, reason, clusterId);
 		})
 	);
 	context.subscriptions.push(
 		commands.registerCommand(DELETE_RHOSAK_CLUSTER_CMD, async (clusterItem?: any) => {
-			let clusterId:string|undefined;
+			let clusterId: string | undefined;
 			if (clusterItem?.cluster?.id) {
 				clusterId = clusterItem.cluster.id;
 			} else if (clusterItem?.id) {
@@ -32,26 +32,26 @@ export function registerCommands (context: ExtensionContext, telemetryService:Te
 			if (!clusterId) {
 				return;
 			}
-			let name: string|undefined; 
+			let name: string | undefined;
 			if (clusterItem?.cluster?.name) {
 				name = clusterItem.cluster.name;
 			} else if (clusterItem?.name) {
 				name = clusterItem.name;
 			}
 			const deleteConfirmation = await window.showWarningMessage(`Are you sure you want to physically delete remote cluster '${name}'?`, 'Cancel', 'Delete');
-        	if (deleteConfirmation !== 'Delete') {
-            	return;
-        	}
+			if (deleteConfirmation !== 'Delete') {
+				return;
+			}
 
 			const session = await authentication.getSession('redhat-account-auth', ['openid'], { createIfNone: true });
 			if (session) {
 				let event = {
 					name: "rhoas.delete.rhosak.cluster",
-					properties:[]
+					properties: []
 				} as TelemetryEvent;
 				try {
 					await rhosakService.deleteKafka(clusterId!, session.accessToken);
-				} catch (error) {
+				} catch (error: any) {
 					event.properties.error = error.message;
 					window.showErrorMessage(`Failed to delete remote Kafka cluster '${name}': ${error.message}`);
 				}
@@ -63,14 +63,14 @@ export function registerCommands (context: ExtensionContext, telemetryService:Te
 			}
 		})
 	);
-    context.subscriptions.push(
+	context.subscriptions.push(
 		commands.registerCommand(CREATE_RHOSAK_CLUSTER_CMD, async () => {
 			try {
 				const clusters = await createRemoteCluster(telemetryService);
-				if (clusters && clusters.length > 0){
+				if (clusters && clusters.length > 0) {
 					return commands.executeCommand("vscode-kafka.api.saveclusters", clusters);
 				}
-			} catch(error) {
+			} catch (error: any) {
 				console.log(error);
 				window.showErrorMessage(error.message);
 			}
@@ -78,7 +78,7 @@ export function registerCommands (context: ExtensionContext, telemetryService:Te
 	);
 }
 
-export async function openRHOSAKDashboard(telemetryService:TelemetryService, reason: string, clusterId?:string) {
+export async function openRHOSAKDashboard(telemetryService: TelemetryService, reason: string, clusterId?: string) {
 	let event = {
 		name: "rhoas.open.rhosak.dashboard",
 		properties: {
