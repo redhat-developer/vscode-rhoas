@@ -1,7 +1,7 @@
 #!/usr/bin/env groovy
 
 def installBuildRequirements(){
-    def nodeHome = tool 'nodejs-12.20.0'
+    def nodeHome = tool 'nodejs-14.19.1'
     env.PATH="${env.PATH}:${nodeHome}/bin"
     sh "npm install -g typescript vsce"
 }
@@ -37,7 +37,7 @@ node('rhel8'){
     if (params.UPLOAD_LOCATION && isCanonicalRepo()) {
         stage 'Upload vscode-rhoas to staging'
         def vsix = findFiles(glob: '**.vsix*')
-        sh "rsync -Pzrlt --rsh=ssh --protocol=28 ${vsix[0].path} ${UPLOAD_LOCATION}/snapshots/vscode-rhoas/"
+        sh "sftp -C ${UPLOAD_LOCATION}/snapshots/vscode-rhoas/ <<< \$'put -p \"${vsix[0].path}\"'"
         stash name:'vsix', includes:vsix[0].path
     }
 }
@@ -65,7 +65,7 @@ node('rhel8'){
 
     if (params.UPLOAD_LOCATION) {
       stage "Promote build to stable/ directory"
-      sh "rsync -Pzrlt --rsh=ssh --protocol=28 *.vsix* ${UPLOAD_LOCATION}/stable/vscode-rhoas/"
+      sh "sftp -C ${UPLOAD_LOCATION}/stable/vscode-rhoas/ <<< \$'put -p \"${vsix[0].path}\"'"
     }
   }
 }
