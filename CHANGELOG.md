@@ -2,8 +2,12 @@
 
 All notable changes to the `Red Hat OpenShift Application Services` extension will be documented in this file.
 
+
+## 0.0.6 (13/07/2022)
+- remove Dynamic SSO authentication resolution now that MAS SSO has shutdown
+
 ## 0.0.5 (05/07/2022)
-- Remove MAS SSO authentication
+- use Dynamic SSO authentication resolution to prepare for MAS SSO shutdown
 - Set progress monitor to 4'30" for Kafka cluster provisioning.
 - add DCO documentation
 

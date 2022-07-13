@@ -120,23 +120,6 @@ export namespace rhosakService {
         }
     }
 
-    export async function getSSOProvider(): Promise<any> {
-        try {
-            const securityAPI = new SecurityApi(undefined, BASE_API);
-            const start = new Date().getTime();
-            const response = await securityAPI.getSsoProviders();
-            const end = new Date().getTime();
-            console.log(`getSSOProvider took ${end - start} ms`);
-            return response.data;
-        } catch (e: any) {
-            if (e?.response?.data?.reason) {
-                throw new Error(e.response.data.reason);
-            }
-            console.log(e);
-            throw e;
-        }
-    }
-
     function getApisService(token?: string) {
         const apiConfig = (token) ? new Configuration({
             basePath: BASE_API,
