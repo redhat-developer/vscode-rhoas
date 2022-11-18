@@ -2,6 +2,9 @@
 
 All notable changes to the `Red Hat OpenShift Application Services` extension will be documented in this file.
 
+## 0.0.7 (18/11/2022)
+- Update vscode-redhat-telemetry to 0.5.2
+- Update kafka-management-sdk to 0.49.0
 
 ## 0.0.6 (13/07/2022)
 - remove Dynamic SSO authentication resolution now that MAS SSO has shutdown
