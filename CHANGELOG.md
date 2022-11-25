@@ -2,7 +2,7 @@
 
 All notable changes to the `Red Hat OpenShift Application Services` extension will be documented in this file.
 
-## 0.0.7 (18/11/2022)
+## 0.0.7 (25/11/2022)
 - Update vscode-redhat-telemetry to 0.5.2
 - Update kafka-management-sdk to 0.49.0
 
