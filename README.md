@@ -1,4 +1,5 @@
-[![Marketplace Version](https://vsmarketplacebadge.apphb.com/version/redhat.vscode-rhoas.svg "Current Release")](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-rhoas)
+> :warning: **Red Hat has decommissioned the `Red Hat OpenShift Streams For Apache Kafka` service. As a consequence, this extension no longer works and has been unpublished from the marketplaces. This repository is now read-only.**
+
 # Red Hat OpenShift Application Services
 
 This is the gateway Visual Studio Code extension for accessing `Red Hat OpenShift Application Services`.
